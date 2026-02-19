@@ -3,3 +3,4 @@ This bot is created specifically for managing functionality in a private server 
 Current actions:
 * slash command to delete all images in a given channel older than x age
 * listens for message create events in a given channel and, if not marked as spoilers, deletes them and messages the author to reupload as spoiler
+* listens for role changes on users, if an aggregate role combination is found it provides a new role (which is removed if the aggregation is lost)
