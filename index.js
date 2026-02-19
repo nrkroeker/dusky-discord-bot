@@ -22,24 +22,18 @@ client.once(Events.ClientReady, () => {
     // scheduleDailyImageCleanup();
 });
 
-client.on(Events.MessageCreate, (message) => {
+client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot) return;
 
-    console.log(`message received from ${message.author.tag}: ${message.content}`);
-
     if (message.channelId !== SPICY_CHANNEL_ID) {
-        console.log("message in another channel");
         return;
     }
-    console.log("message in dusky bot testing");
     if (message.attachments.size > 0) {
-        console.log("has attachments")
         for (const attachment of message.attachments.values()) {
-            // Having a height indicates it is an image
-            if (attachment.height && !attachment.spoiler) {
+            if (attachment.contentType.startsWith('image') && !attachment.spoiler) {
                 console.log("Message deleted for containing an un-spoilered image");
-                message.reply(`In this channel, all images must be marked with a spoiler tag and CW describing what the image contains. Please delete and reupload your image within these guidelines, thank you.`)
-                // message mod log that an unspoilered image needs to be deleted if user doesn't do so themself
+                await message.reply(`${message.author} All images posted in this channel must be marked with a spoiler tag and content warning describing what the image contains. Please reupload your image within these guidelines, thank you. 🙂`)
+                await message.delete();
             }
         }
     }
@@ -49,12 +43,10 @@ client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === 'delete-old-images') {
-        console.log("deleting old images...");
-        await interaction.deferReply({ content: 'deleting old images... :)'});
+        await interaction.deferReply({ content: 'Deleting old images... :)'});
         const spicyChannel = await client.channels.fetch(SPICY_CHANNEL_ID);
-        console.log(await spicyChannel.messages.fetch({ limit: 1 }));
         const { deletedCount } = await deleteOldImages(1, spicyChannel);
-        const returnMessage = deletedCount > 0 ? `deleted ${deletedCount} old images :)` : 'No old images found to delete';
+        const returnMessage = deletedCount > 0 ? `Deleted ${deletedCount} images older than ${SPICY_IMAGE_AGE} days` : 'No old images found to delete';
         await interaction.editReply({ content: returnMessage });
     }
 });
