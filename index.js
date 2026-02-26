@@ -18,6 +18,11 @@ dotenv.config();
  * (node:39100) Warning: Supplying "ephemeral" for interaction response options is deprecated. Utilize flags instead.        
  */
 
+/**
+ * make a post in log channel whenever deleting an unspoilered image
+ * or slash command is used
+ */
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
