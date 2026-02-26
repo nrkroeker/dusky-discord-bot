@@ -12,6 +12,12 @@ const commands = [
     new SlashCommandBuilder()
     .setName('delete-all-messages')
     .setDescription('Deletes all messages in the current channel')
+    .addNumberOption(option => 
+      option
+        .setName('age')
+        .setDescription('The age of images to delete in days (e.g. 7 will delete all images older than 7 days)')
+        .setRequired(false)
+    )
     .toJSON(),
     new SlashCommandBuilder()
     .setName('enable-spoiler-requirement')

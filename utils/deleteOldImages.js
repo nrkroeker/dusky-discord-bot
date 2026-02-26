@@ -1,8 +1,7 @@
 // Function to find all images in a given channel older than a given limit and delete them
 export const deleteOldImages = async (ageDays, channel) => {
     const now = Date.now();
-    const ageLimitMs = 1; // 20 minutes
-    // const ageLimitMs = ageDays * 24 * 60 * 60 * 1000; // Convert days to MS
+    const ageLimitMs = ageDays * 24 * 60 * 60 * 1000; // Convert days to MS
     let fetchedMessages;
     let deletedCount = 0;
 

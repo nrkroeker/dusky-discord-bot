@@ -81,11 +81,12 @@ client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === 'delete-old-images') {
-        await interaction.deferReply({ content: 'Deleting old images... :)'});
+        await interaction.deferReply({ content: 'Deleting old images... :)', flags: MessageFlags.Ephemeral });
         const spicyChannel = await client.channels.fetch(constants.SPICY_CHANNEL_ID);
-        const { deletedCount } = await deleteOldImages(1, spicyChannel);
-        const returnMessage = deletedCount > 0 ? `Deleted ${deletedCount} images older than ${constants.SPICY_IMAGE_AGE} days` : 'No old images found to delete';
-        await interaction.editReply({ content: returnMessage });
+        const age = interaction.options.getNumber('age') || 7;
+        const { deletedCount } = await deleteOldImages(age, spicyChannel);
+        const returnMessage = deletedCount > 0 ? `Deleted ${deletedCount} images older than ${age} days` : 'No old images found to delete';
+        await interaction.editReply({ content: returnMessage, flags: MessageFlags.Ephemeral });
     }
 });
 
