@@ -9,6 +9,18 @@ const commands = [
     .setName('delete-old-images')
     .setDescription('Deletes all old images in specified channel older than certain time!')
     .toJSON(),
+    new SlashCommandBuilder()
+    .setName('delete-all-messages')
+    .setDescription('Deletes all messages in the current channel')
+    .toJSON(),
+    new SlashCommandBuilder()
+    .setName('enable-spoiler-requirement')
+    .setDescription('Enables auto deleting unspoilered messages and sending a warning message for this channel')
+    .toJSON(),
+    new SlashCommandBuilder()
+    .setName('disable-spoiler-requirement')
+    .setDescription('Disables auto deleting unspoilered messages and sending a warning message for this channel')
+    .toJSON(),
   // Add more commands here
 ];
 
