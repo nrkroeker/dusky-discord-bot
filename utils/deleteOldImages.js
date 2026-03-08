@@ -1,32 +1,51 @@
-// Function to find all images in a given channel older than a given limit and delete them
-export const deleteOldImages = async (ageDays, channel) => {
+export const deleteOldImages = async (ageDays, channel, lastCheckedId = null) => {
     const now = Date.now();
-    const ageLimitMs = ageDays * 24 * 60 * 60 * 1000; // Convert days to MS
-    let fetchedMessages;
+    const ageLimitMs = ageDays * 24 * 60 * 60 * 1000;
+
+    let lastId;
     let deletedCount = 0;
+    let newestMessageId = null;
 
-    // Fetch messages iteratively to batch into groups of 100
     while (true) {
-        fetchedMessages = await channel.messages.fetch({ limit: 100 });
-        console.log('fetchedMessages: ', fetchedMessages);
-        const oldImageMessages = fetchedMessages.filter(msg => {
-            const messageAgeMs = now - msg.createdTimestamp;
-            // Return true to keep message in array if it is older than the limit AND has an image attachment
-            const hasImage = msg.attachments.some(attachment => attachment.contentType.startsWith('image'));
-            return hasImage && messageAgeMs > ageLimitMs;
-        })
-        if (oldImageMessages.size === 0) break;
+        const messages = await channel.messages.fetch({
+            limit: 100,
+            before: lastId
+        });
 
-        for (const message of oldImageMessages.values()) {
-            try {
-                await message.delete();
-                deletedCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000)); // delay to avoid hitting rate limits by spam deleting
-            } catch (error) {
-                console.error(`Failed to delete message ${message.id}:`, error);
+        if (messages.size === 0) break;
+
+        if (!newestMessageId) {
+            newestMessageId = messages.first().id;
+        }
+
+        for (const msg of messages.values()) {
+
+            if (lastCheckedId && BigInt(msg.id) <= BigInt(lastCheckedId)) {
+                return { deletedCount, newLastCheckedId: newestMessageId };
+            }
+
+            if (msg.attachments.size === 0) continue;
+
+            const messageAgeMs = now - msg.createdTimestamp;
+
+            const hasImage = msg.attachments.some(
+                a => a.contentType?.startsWith('image')
+            );
+
+            if (hasImage && messageAgeMs > ageLimitMs) {
+                try {
+                    await msg.delete();
+                    deletedCount++;
+                    await new Promise(r => setTimeout(r, 1000));
+                } catch (error) {
+                    console.error(`Failed to delete message ${msg.id}`, error);
+                }
             }
         }
-        console.log(`Cleanup Review: Deleted ${deletedCount} images older than ${ageDays} days.`);
-        return { deletedCount };
+
+        lastId = messages.last().id;
     }
-}
+
+    console.log(`Cleanup Review: Deleted ${deletedCount} images older than ${ageDays} days.`);
+    return { deletedCount, newLastCheckedId: newestMessageId };
+};

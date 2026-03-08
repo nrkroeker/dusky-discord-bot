@@ -7,17 +7,17 @@ dotenv.config();
 const commands = [
   new SlashCommandBuilder()
     .setName('delete-old-images')
-    .setDescription('Deletes all old images in specified channel older than certain time!')
+    .setDescription('Deletes all old images in specified channel older than certain time! Defaults to 7 days')
+        .addNumberOption(option => 
+      option
+        .setName('age')
+        .setDescription('The age of images to delete in days (e.g. 7 will delete all images older than 7 days, default is 7)')
+        .setRequired(false)
+    )
     .toJSON(),
     new SlashCommandBuilder()
     .setName('delete-all-messages')
     .setDescription('Deletes all messages in the current channel')
-    .addNumberOption(option => 
-      option
-        .setName('age')
-        .setDescription('The age of images to delete in days (e.g. 7 will delete all images older than 7 days)')
-        .setRequired(false)
-    )
     .toJSON(),
     new SlashCommandBuilder()
     .setName('enable-spoiler-requirement')
@@ -38,7 +38,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
     // The put method is used to fully refresh all commands in the guild/globally
     await rest.put(
-      Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID), // Use Routes.applicationCommands(CLIENT_ID) for global commands
+      Routes.applicationCommands(process.env.APP_ID, process.env.GUILD_ID), // Use Routes.applicationCommands(CLIENT_ID) for global commands
       { body: commands },
     );
 
