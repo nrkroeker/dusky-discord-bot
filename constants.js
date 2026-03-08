@@ -1,6 +1,6 @@
 export const CONFIG_FILE = './config.json';
 // Default age of images in spicy channel in days (e.g. 7 days)
-export const SPICY_IMAGE_AGE = 7;
+export const DEFAULT_SPICY_IMAGE_AGE = 7;
 
 export const SPICY_ROLE_ID = '1473918230295871509';
 export const SAPPHIC_ROLE_ID = '1473918393475403950';
