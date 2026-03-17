@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from "fs";
-import { Client, GatewayIntentBits, Events, MessageFlags } from 'discord.js';
+import { Client, GatewayIntentBits, Events, MessageFlags, ChannelType, PermissionsBitField } from 'discord.js';
 import { deleteOldImages } from './utils/deleteOldImages.js';
 import { CONFIG_FILE, DEFAULT_SPICY_IMAGE_AGE } from './constants.js';
 dotenv.config();
@@ -21,6 +21,7 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildScheduledEvents,
         GatewayIntentBits.MessageContent
     ]
 });
@@ -87,6 +88,8 @@ client.on(Events.MessageCreate, async (message) => {
     }
 });
 
+// Onboarding role: "are you attracted to women in a sapphic way"? -> gives sapphic role
+// she/her and she/they and "sapphic" roles min 1 week age
 // TODO figure out how to configure this
 // client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
 //     const addedRoles = newMember.roles.cache.filter(role => !oldMember.roles.cache.has(role.id));
@@ -118,10 +121,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (interaction.commandName === 'delete-old-images') {
         await interaction.deferReply({ content: 'Deleting old images... :)', flags: MessageFlags.Ephemeral });
-        const spicyChannel = await client.channels.fetch(constants.SPICY_CHANNEL_ID);
+        const deleteChannel = await client.channels.fetch(interaction.channelId);
         const ageOption = interaction.options.getNumber('age');
         const age = ageOption !== null && ageOption !== undefined ? ageOption : DEFAULT_SPICY_IMAGE_AGE;
-        const { deletedCount, newLastCheckedId } = await deleteOldImages(age, spicyChannel, lastCheckedForImagesMessageId);
+        const { deletedCount, newLastCheckedId } = await deleteOldImages(age, deleteChannel, lastCheckedForImagesMessageId);
         setLastCheckedForImagesMessageId(newLastCheckedId);
         const returnMessage = deletedCount > 0 ? `Deleted ${deletedCount} images older than ${age} days` : 'No old images found to delete';
         await interaction.editReply({ content: returnMessage, flags: MessageFlags.Ephemeral });
@@ -167,5 +170,32 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.editReply({ content: `Spoiler requirement deletion and message is disabled for this channel`,  flags: MessageFlags.Ephemeral });
     }
 })
+
+// put this in a schedule
+// async function setupChannelForEvent(event) {
+//     const channel = await client.channels.fetch(event.channelId);
+//     if (channel) {
+//         if (channel.type === ChannelType.GuildVoice) {
+//             try {
+//                 // figure out PERMISSIONS bot needs for this
+//                 await channel.permissionOverwrites.edit(channel.guild.roles.everyone, {
+//                     [PermissionsBitField.Flags.Connect]: true,
+//                     [PermissionsBitField.Flags.Speak]: true,
+//                 });
+//             } catch (error) {
+//                 console.error(`Failed to set permissions for event ${event.name} with ID ${event.channelId}:`, error);
+//             }
+//         }
+//     } else {
+//         console.error(`Failed to fetch channel for event ${event.name} with ID ${event.channelId}`);
+//     }
+// }
+
+// When event is created, schedule function to set up channel for it
+// client.on(Events.GuildScheduledEventCreate, async event => {
+//     console.log(`Scheduled event created: ${event.name}`);
+//     // Schedule function to set up channel for the event
+//     await setupChannelForEvent(event);
+// });
 
 client.login(process.env.DISCORD_TOKEN);
